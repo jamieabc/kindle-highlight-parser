@@ -14,7 +14,7 @@ const (
 	inputFileName      = "My Clippings.txt"
 	outputFileName     = "kindle.txt"
 	highlightSeparator = "=========="
-	bookStartIndex     = 3 // \ufeff
+	specialChar        = "\ufeff"
 	positionPrefix     = "- "
 	sentenceStartIndex = 3
 	newLineChars       = "\r\n"
@@ -85,7 +85,7 @@ func removeFirstEmptyLines(line string) string {
 
 func parseParagraph(paragraph string) (bookName string, timeStr string, sentence string) {
 	lines := strings.Split(paragraph, "\r\n")
-	bookName = lines[0][bookStartIndex:]
+	bookName = parseBook(lines[0])
 	timeStr, err := parseTime(lines[1])
 	if nil != err {
 		fmt.Printf("parse time of %s with error: %s\n", lines[1], err)
@@ -95,11 +95,8 @@ func parseParagraph(paragraph string) (bookName string, timeStr string, sentence
 	return
 }
 
-func combineHighlight(hs highlights, book string, h highlight) {
-	if _, ok := hs[book]; !ok {
-		hs[book] = make([]highlight, 0)
-	}
-	hs[book] = append(hs[book], h)
+func parseBook(line string) string {
+	return strings.ReplaceAll(line, specialChar, "")
 }
 
 func parseTime(line string) (string, error) {
@@ -111,6 +108,13 @@ func parseTime(line string) (string, error) {
 	return matches[0], nil
 }
 
+func combineHighlight(hs highlights, book string, h highlight) {
+	if _, ok := hs[book]; !ok {
+		hs[book] = make([]highlight, 0)
+	}
+	hs[book] = append(hs[book], h)
+}
+
 func writeToOutputFile(hs highlights) {
 	f, err := os.Create(outputFileName)
 	if nil != err {
@@ -120,8 +124,9 @@ func writeToOutputFile(hs highlights) {
 	defer f.Close()
 
 	w := bufio.NewWriter(f)
+	bookNumber := 1
 	for bookName, sentences := range hs {
-		w.WriteString(fmt.Sprintf("%s\n\n", bookName))
+		w.WriteString(fmt.Sprintf("%d. %s\n\n", bookNumber, bookName))
 		for _, s := range sentences {
 			if emptyLine(s.sentence) {
 				continue
@@ -129,6 +134,7 @@ func writeToOutputFile(hs highlights) {
 			str := fmt.Sprintf("\t%s%s\n", positionPrefix, s.sentence)
 			w.WriteString(str)
 		}
+		bookNumber++
 	}
 	w.Flush()
 }
