@@ -85,13 +85,13 @@ func removeFirstEmptyLines(line string) string {
 
 func parseParagraph(paragraph string) (bookName string, timeStr string, sentence string) {
 	lines := strings.Split(paragraph, "\r\n")
-	bookName = lines[0][3:]
+	bookName = lines[0][bookStartIndex:]
 	timeStr, err := parseTime(lines[1])
 	if nil != err {
 		fmt.Printf("parse time of %s with error: %s\n", lines[1], err)
 		return
 	}
-	sentence = strings.Join(lines[3:], "\n")
+	sentence = strings.Join(lines[sentenceStartIndex:], "\n")
 	return
 }
 
@@ -123,9 +123,18 @@ func writeToOutputFile(hs highlights) {
 	for bookName, sentences := range hs {
 		w.WriteString(fmt.Sprintf("%s\n\n", bookName))
 		for _, s := range sentences {
-			str := fmt.Sprintf("\t- %s\n", s.sentence)
+			if emptyLine(s.sentence) {
+				continue
+			}
+			str := fmt.Sprintf("\t%s%s\n", positionPrefix, s.sentence)
 			w.WriteString(str)
 		}
 	}
 	w.Flush()
+}
+
+func emptyLine(line string) bool {
+	truncated := strings.ReplaceAll(line, "\n", "")
+	truncated = strings.ReplaceAll(truncated, " ", "")
+	return 0 == len(truncated)
 }
