@@ -14,10 +14,13 @@ const (
 	inputFileName      = "My Clippings.txt"
 	outputFileName     = "kindle.txt"
 	highlightSeparator = "=========="
-	specialChar        = "\ufeff"
-	positionPrefix     = "- "
-	sentenceStartIndex = 3
-	newLineChars       = "\r\n"
+
+	// this special come from downloaded file, if directly bought from amazon, I haven't seen that
+	specialChar = "\ufeff"
+
+	outputSentencePrefix = "- "
+	sentenceStartIndex   = 3
+	newLineChars         = "\r\n"
 
 	// "2018年5月3日星期四 下午2:59:59"
 	timeFormat = "(20\\d\\d).*(\\d+).*(\\d+).* (.*)(\\d+):(\\d+):(\\d+)"
@@ -131,7 +134,7 @@ func writeToOutputFile(hs highlights) {
 			if emptyLine(s.sentence) {
 				continue
 			}
-			str := fmt.Sprintf("\t%s%s\n", positionPrefix, s.sentence)
+			str := fmt.Sprintf("\t%s%s\n", outputSentencePrefix, s.sentence)
 			w.WriteString(str)
 		}
 		bookNumber++
